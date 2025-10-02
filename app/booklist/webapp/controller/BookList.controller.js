@@ -4,8 +4,10 @@ sap.ui.define(
     "sap/ui/core/Fragment",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
   ],
-  (Controller, Fragment, MessageToast, MessageBox) => {
+  (Controller, Fragment, MessageToast, MessageBox, Filter, FilterOperator) => {
     "use strict";
 
     return Controller.extend("booklist.controller.BookList", {
@@ -65,11 +67,11 @@ sap.ui.define(
         this._oAuthorDialog.open();
       },
 
-            /**
-       * Marks the given entity as deleted without removing it from the backend.
-       * This “soft delete” simply sets the isDeleted flag to true,
-       * allowing us to filter out or archive records without losing history.
-       */
+      /**
+ * Marks the given entity as deleted without removing it from the backend.
+ * This “soft delete” simply sets the isDeleted flag to true,
+ * allowing us to filter out or archive records without losing history.
+ */
       _performSoftDelete: async function (oContext) {
         await oContext.setProperty("isDeleted", true);
       },
@@ -88,7 +90,7 @@ sap.ui.define(
         const oList = this.byId("authorList");
         // Retrieve all selected contexts (binding contexts) from the list
         const aContexts = oList.getSelectedContexts();
-        
+
         // Ensure exactly one author is selected before proceeding
         if (aContexts.length !== 1) {
           MessageToast.show("Please select one author to delete.");
@@ -96,7 +98,7 @@ sap.ui.define(
         }
         // We only care about the first selected context
         const oContext = aContexts[0];
-        
+
 
         // Show a confirmation dialog before hard-deleting the record
         MessageBox.confirm("Are you sure you want to delete this author?", {
@@ -193,6 +195,57 @@ sap.ui.define(
         if (oBinding) {
           oBinding.refresh();
         }
+      },
+
+      onAuthorSelect: function () {
+        // Get the reference to the author list control by its ID
+        const oList = this.byId("authorList");
+
+        // Get the currently selected item (author) from the list
+        const oAuthorSelected = oList.getSelectedItem();
+
+        // If no author is selected, exit the function
+        if (!oAuthorSelected) {
+          return;
+        }
+
+        // Retrieve the ID of the selected author from its binding context
+        const sAuthorId = oAuthorSelected.getBindingContext().getProperty("ID");
+
+        // Call a private function to bind and display books related to the selected author
+        this._bindBooks(sAuthorId);
+      },
+
+      _bindBooks: function (sAuthorID) {
+        // Get a reference to the books table control by its ID
+        const oTable = this.byId("booksTable");
+
+        // If no author ID is provided, unbind the table and exit
+        if (!sAuthorID) {
+          oTable.unbindItems();
+          return;
+        }
+
+        // Bind the table items to the /Books entity set, filtered by the selected author's ID
+        oTable.bindItems({
+          path: "/Books", // OData entity set
+          filters: [new Filter("author_ID", FilterOperator.EQ, sAuthorID)], // Show only books matching the selected author
+          template: new sap.m.ColumnListItem({
+            cells: [
+              // Display the book title
+              new sap.m.Text({ text: "{title}" }),
+              // Display the book description
+              new sap.m.Text({ text: "{descr}" }),
+              // Display the stock as a number
+              new sap.m.ObjectNumber({ number: "{stock}" }),
+              // Display the price along with its currency code
+              new sap.m.ObjectNumber({
+                number: "{price}",
+                unit: "{currency_code}",
+              }),
+            ],
+          }),
+        });
       },
     });
   }
