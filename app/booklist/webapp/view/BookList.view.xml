@@ -63,6 +63,33 @@
                 id="detailPage"
                 title="Book List"
             >
+
+                <subHeader>
+                    <Toolbar>
+                        <ToolbarSpacer />
+
+                        <Button
+                            id="addBookBtn"
+                            icon="sap-icon://add"
+                            tooltip="Add Book"
+                            press=".onAddBook"
+                        />
+                        <Button
+                            id="editBookBtn"
+                            icon="sap-icon://edit"
+                            tooltip="Edit Selected Book"
+                            press=".onEditBook"
+                        />
+                        <Button
+                            id="deleteBookBtn"
+                            icon="sap-icon://delete"
+                            tooltip="Delete Selected Book"
+                            type="Reject"
+                            press=".onDeleteBook"
+                        />
+                    </Toolbar>
+                </subHeader>
+                
                 <Table
                     id="booksTable"
                     mode="SingleSelectMaster"
