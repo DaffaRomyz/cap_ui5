@@ -429,7 +429,43 @@ sap.ui.define(
                 }
             },
 
+            onDeleteBook: function () {
+                const oList = this.byId("booksTable");
+                const aContexts = oList.getSelectedContexts();
 
+                if (aContexts.length !== 1) {
+                  MessageToast.show("Please select one book to delete.");
+                  return;
+                }
+
+                // Confirm with the user
+                MessageBox.confirm("Are you sure you want to delete this book?", {
+                  actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+                  onClose: async function (sAction) {
+                    if (sAction !== MessageBox.Action.OK) {
+                      return;
+                    }
+
+                    try {
+                      const oContext = aContexts[0];
+
+                      // Perform the delete on the context
+                      this._performHardDelete(oContext);
+
+                      MessageToast.show("Book deleted successfully.");
+
+                      // Refresh the list & clear books table
+                      this._bindBooks(this._sSelectedAuthorId);
+                    } catch (oError) {
+                      MessageToast.show(
+                        "Error deleting book: " + (oError.message || oError)
+                      );
+                    }
+                  }.bind(this),
+                });
+              },
+
+              
         });
     }
 );
