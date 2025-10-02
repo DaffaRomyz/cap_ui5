@@ -339,6 +339,96 @@ sap.ui.define(
                 }
             },
 
+            // Handler for the “Edit Book” action:
+            // • Ensures exactly one book is selected
+            // • Stores its binding context for later update
+            // • Lazy-loads the EditBookDialog fragment
+            // • Prefills all input fields with the current book data
+            // • Opens the dialog
+            onEditBook: async function () {
+                const oList = this.byId("booksTable");
+                const aContexts = oList.getSelectedContexts();
+
+                // Require one and only one selection
+                if (aContexts.length !== 1) {
+                    MessageToast.show("Please select one book to edit.");
+                    return;
+                }
+
+                // Save the selected context for onEditBookConfirm
+                this._oEditContext = aContexts[0];
+                const oData = this._oEditContext.getObject();
+
+                // Load the EditBookDialog fragment if not already loaded
+                if (!this._oBookDialog) {
+                    this._oBookDialog = await Fragment.load({
+                        id: this.getView().getId(),
+                        name: "booklist.view.EditBookDialog",
+                        controller: this,
+                    });
+                    // Ensure the dialog is destroyed when the view is destroyed
+                    this.getView().addDependent(this._oBookDialog);
+                }
+
+                const sFragId = this.getView().getId();
+                // Prefill the dialog inputs with the book’s existing values
+                Fragment.byId(sFragId, "editTitleInput").setValue(oData.title);
+                Fragment.byId(sFragId, "editDescrInput").setValue(oData.descr);
+                Fragment.byId(sFragId, "editStockInput").setValue(oData.stock);
+                Fragment.byId(sFragId, "editPriceInput").setValue(oData.price);
+                Fragment.byId(sFragId, "editCurrencyInput").setValue(
+                    oData.currency_code
+                );
+
+                this._oBookDialog.open();
+            },
+
+            // Handler for the EditBookDialog’s “Save” button:
+            // • Reads updated field values
+            // • Updates properties in the stored binding context
+            // • Submits a batch update to the OData service
+            // • Shows a success toast or an error dialog
+            // • Closes the dialog and refreshes the books table
+            onEditBookConfirm: async function () {
+                const oModel = this.getView().getModel();
+                const sFragId = this.getView().getId();
+
+                // Read and normalize updated values from the dialog
+                const sTitle = Fragment.byId(sFragId, "editTitleInput")
+                    .getValue()
+                    .trim();
+                const sDescr = Fragment.byId(sFragId, "editDescrInput")
+                    .getValue()
+                    .trim();
+                let iStock = parseInt(
+                    Fragment.byId(sFragId, "editStockInput").getValue().trim(),
+                    10
+                );
+                const fPrice = Fragment.byId(sFragId, "editPriceInput")
+                    .getValue()
+                    .trim();
+                const sCurrency = Fragment.byId(sFragId, "editCurrencyInput")
+                    .getValue()
+                    .trim()
+                    .toUpperCase();
+
+                try {
+                    const oContext = this._oEditContext;
+                    // Apply each updated property to the binding context
+                    await oContext.setProperty("title", sTitle);
+                    await oContext.setProperty("descr", sDescr);
+                    await oContext.setProperty("stock", iStock);
+                    await oContext.setProperty("price", fPrice);
+                    await oContext.setProperty("currency_code", sCurrency);
+
+                    MessageToast.show("Book updated");
+                    this._closeAndDestroyDialog();
+                    this._refreshBooks();
+                } catch (error) {
+                    MessageBox.error(error.message);
+                }
+            },
+
 
         });
     }
