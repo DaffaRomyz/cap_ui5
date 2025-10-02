@@ -1,6 +1,41 @@
-<mvc:View controllerName="booklist.controller.BookList"
+<mvc:View
+    controllerName="booklist.controller.BookList"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
-    </Page>
+>
+    <SplitApp id="splitApp">
+        <!-- MASTER: Authors List on the left side -->
+        <masterPages>
+            <Page title="Dashboard">
+                <!-- Subheader toolbar with title and Add button -->
+                <subHeader>
+                    <Toolbar>
+                        <Title text="Authors" />
+                        <ToolbarSpacer />
+
+                        <Button
+                            icon="sap-icon://add"
+                            tooltip="Add Author"
+                            press=".onAddAuthor"
+                        />
+                    </Toolbar>
+                </subHeader>
+
+                <!-- List bound to the /Authors OData endpoint -->
+                <List
+                    id="authorList"
+                    mode="SingleSelectMaster"
+                    items="{ path: '/Authors'}"
+                >
+                    <!-- Template for each author -->
+                    <StandardListItem
+                        title="{name}"
+                        description="{bio}"
+                        type="Active"
+                    />
+                </List>
+            </Page>
+        </masterPages>
+    </SplitApp>
 </mvc:View>
