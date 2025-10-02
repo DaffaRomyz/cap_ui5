@@ -26,6 +26,12 @@
                             press=".onEditAuthor"
                         />
                         
+                        <Button
+                            icon="sap-icon://delete"
+                            type="Reject"
+                            tooltip="Delete Author"
+                            press=".onDeleteAuthor"
+                        />
                     </Toolbar>
                 </subHeader>
 

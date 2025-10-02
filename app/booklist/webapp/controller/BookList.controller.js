@@ -16,7 +16,7 @@ sap.ui.define(
       _oEditContext: null,
 
       // Lifecycle hook—could initialize additional logic if needed
-      onInit() {},
+      onInit() { },
 
       // Handler for the "Add Author" button: lazy-loads the fragment and opens the dialog
       onAddAuthor: async function () {
@@ -30,11 +30,11 @@ sap.ui.define(
         this._oAuthorDialog.open();
       },
 
-       /**
-       * onEditAuthor
-       * Ensures exactly one author is selected, saves its context,
-       * pre-fills the Edit dialog inputs, and opens the dialog.
-       */
+      /**
+      * onEditAuthor
+      * Ensures exactly one author is selected, saves its context,
+      * pre-fills the Edit dialog inputs, and opens the dialog.
+      */
       onEditAuthor: async function () {
         const oList = this.byId("authorList");
         const aContexts = oList.getSelectedContexts();
@@ -63,6 +63,45 @@ sap.ui.define(
         Fragment.byId(sFragId, "editBioInput").setValue(oData.bio);
 
         this._oAuthorDialog.open();
+      },
+
+      onDeleteAuthor: function () {
+        // Get reference to the authors list control
+        const oList = this.byId("authorList");
+        // Retrieve all selected contexts (binding contexts) from the list
+        const aContexts = oList.getSelectedContexts();
+        
+        // Ensure exactly one author is selected before proceeding
+        if (aContexts.length !== 1) {
+          MessageToast.show("Please select one author to delete.");
+          return;
+        }
+        // We only care about the first selected context
+        const oContext = aContexts[0];
+        
+        
+        // Show a confirmation dialog before hard-deleting the record
+        MessageBox.confirm("Are you sure you want to delete this author?", {
+          actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+          onClose: async function (sAction) {
+            // If the user cancels, do nothing
+            if (sAction !== MessageBox.Action.OK) {
+              return;
+            }
+
+            try {
+              // Perform the OData V4 delete operation on the selected context
+              await oContext.delete();
+              MessageToast.show("Author deleted successfully.");
+
+              // Refresh the list so the deleted entry is removed from the UI
+              this._refreshAuthorList();
+            } catch (error) {
+              // Show an error dialog if the delete request fails
+              MessageBox.error(error.message);
+            }
+          }.bind(this)  // Bind the handler so we can access `this._refreshAuthorList()`
+        });
       },
 
       // Handler for the dialog’s "Cancel" button: cleanly close and destroy the fragment
