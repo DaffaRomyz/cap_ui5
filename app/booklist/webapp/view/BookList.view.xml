@@ -39,7 +39,11 @@
                 <List
                     id="authorList"
                     mode="SingleSelectMaster"
-                    items="{ path: '/Authors'}"
+                    items="{    path:'/Authors',
+                                parameters: {
+                                    $filter: 'isDeleted eq false'
+                                } 
+                            }"
                 >
                     <!-- Template for each author -->
                     <StandardListItem

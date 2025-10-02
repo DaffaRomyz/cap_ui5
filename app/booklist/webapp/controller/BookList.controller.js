@@ -65,6 +65,24 @@ sap.ui.define(
         this._oAuthorDialog.open();
       },
 
+            /**
+       * Marks the given entity as deleted without removing it from the backend.
+       * This “soft delete” simply sets the isDeleted flag to true,
+       * allowing us to filter out or archive records without losing history.
+       */
+      _performSoftDelete: async function (oContext) {
+        await oContext.setProperty("isDeleted", true);
+      },
+
+      /**
+       * Permanently removes the given entity from the backend.
+       * This “hard delete” issues an OData DELETE request on the context,
+       * eliminating the record entirely.
+       */
+      _performHardDelete: async function (oContext) {
+        await oContext.delete();
+      },
+
       onDeleteAuthor: function () {
         // Get reference to the authors list control
         const oList = this.byId("authorList");
@@ -79,7 +97,7 @@ sap.ui.define(
         // We only care about the first selected context
         const oContext = aContexts[0];
         
-        
+
         // Show a confirmation dialog before hard-deleting the record
         MessageBox.confirm("Are you sure you want to delete this author?", {
           actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
@@ -91,7 +109,7 @@ sap.ui.define(
 
             try {
               // Perform the OData V4 delete operation on the selected context
-              await oContext.delete();
+              this._performSoftDelete(oContext);
               MessageToast.show("Author deleted successfully.");
 
               // Refresh the list so the deleted entry is removed from the UI
