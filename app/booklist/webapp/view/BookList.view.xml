@@ -19,6 +19,13 @@
                             tooltip="Add Author"
                             press=".onAddAuthor"
                         />
+
+                        <Button
+                            icon="sap-icon://edit"
+                            tooltip="Edit Author"
+                            press=".onEditAuthor"
+                        />
+                        
                     </Toolbar>
                 </subHeader>
 

@@ -12,6 +12,9 @@ sap.ui.define(
       // Holds the dialog instance so we load it only once
       _oAuthorDialog: null,
 
+      // Stores the selected author’s binding context when editing
+      _oEditContext: null,
+
       // Lifecycle hook—could initialize additional logic if needed
       onInit() {},
 
@@ -24,6 +27,41 @@ sap.ui.define(
             controller: this,
           });
         }
+        this._oAuthorDialog.open();
+      },
+
+       /**
+       * onEditAuthor
+       * Ensures exactly one author is selected, saves its context,
+       * pre-fills the Edit dialog inputs, and opens the dialog.
+       */
+      onEditAuthor: async function () {
+        const oList = this.byId("authorList");
+        const aContexts = oList.getSelectedContexts();
+
+        if (aContexts.length !== 1) {
+          MessageToast.show("Please select one author to edit.");
+          return;
+        }
+
+        // Keep the selected context for the update call
+        this._oEditContext = aContexts[0];
+        const oData = this._oEditContext.getObject();
+
+        // Load the Edit fragment if not already loaded
+        if (!this._oAuthorDialog) {
+          this._oAuthorDialog = await Fragment.load({
+            id: this.getView().getId(),
+            name: "booklist.view.EditAuthorDialog",
+            controller: this,
+          });
+        }
+
+        // Prefill dialog fields with the selected author’s current data
+        const sFragId = this.getView().getId();
+        Fragment.byId(sFragId, "editNameInput").setValue(oData.name);
+        Fragment.byId(sFragId, "editBioInput").setValue(oData.bio);
+
         this._oAuthorDialog.open();
       },
 
@@ -51,6 +89,32 @@ sap.ui.define(
           MessageToast.show("Author created");
         } catch (error) {
           // Show an error dialog if the request fails
+          MessageBox.error(error.message);
+        }
+
+        this._closeAndDestroyDialog();
+        this._refreshAuthorList();
+      },
+
+      /**
+       * onEditAuthorConfirm
+       * Reads updated values, updates the bound context properties,
+       * submits the OData update batch, shows feedback,
+       * then closes the dialog and refreshes the list.
+       */
+      onEditAuthorConfirm: async function () {
+        const sFragId = this.getView().getId();
+        const oModel = this.getView().getModel();
+        const sName = Fragment.byId(sFragId, "editNameInput").getValue().trim();
+        const sBio = Fragment.byId(sFragId, "editBioInput").getValue().trim();
+        const oContext = this._oEditContext; // previously stored binding context
+
+        try {
+          // Update the properties in the context
+          await oContext.setProperty("name", sName);
+          await oContext.setProperty("bio", sBio);
+          MessageToast.show("Author updated");
+        } catch (error) {
           MessageBox.error(error.message);
         }
 
