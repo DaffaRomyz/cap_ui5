@@ -246,7 +246,9 @@ sap.ui.define(
                 // Bind the table items to the /Books entity set, filtered by the selected author's ID
                 oTable.bindItems({
                     path: "/Books", // OData entity set
-                    filters: [new Filter("author_ID", FilterOperator.EQ, sAuthorID)], // Show only books matching the selected author
+                    filters: [  new Filter("author_ID", FilterOperator.EQ, sAuthorID),
+                                new Filter("isDeleted", FilterOperator.EQ, false)
+                    ], // Show only books matching the selected author
                     template: new sap.m.ColumnListItem({
                         cells: [
                             // Display the book title
@@ -450,7 +452,7 @@ sap.ui.define(
                       const oContext = aContexts[0];
 
                       // Perform the delete on the context
-                      this._performHardDelete(oContext);
+                      this._performSoftDelete(oContext);
 
                       MessageToast.show("Book deleted successfully.");
 
@@ -465,7 +467,7 @@ sap.ui.define(
                 });
               },
 
-              
+
         });
     }
 );
